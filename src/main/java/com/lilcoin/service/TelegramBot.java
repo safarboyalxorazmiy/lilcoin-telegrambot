@@ -9,13 +9,18 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.*;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
 
 @Slf4j
 @Component
@@ -66,7 +71,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
               if (password.equals("Xp2s5v8y/B?E(H+KbPeShVmYq3t6w9z$C&F)J@NcQfTjWnZr4u7x!A%D*G-KaPdSgUkXp2s5v8y/B?E(H+MbQeThWmYq3t6w9z$C&F)J@NcRfUjXn2r4u7x!A%D*G-Ka")) {
                 usersService.changeRole(chatId, Role.ROLE_ADMIN);
-                startCommandReceived(chatId, update.getMessage().getChat().getFirstName(), update.getMessage().getChat().getLastName());
+                sendPhotoWithInlineButtons(chatId);
                 return;
               }
               return;
@@ -74,7 +79,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             switch (messageText) {
               case "/start" -> {
-                startCommandReceived(chatId, update.getMessage().getChat().getFirstName(), update.getMessage().getChat().getLastName());
+                sendPhotoWithInlineButtons(chatId);
                 return;
               }
               case "/help" -> {
@@ -97,23 +102,52 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
   }
 
-  private void startCommandReceived(long chatId, String firstName, String lastName) {
-    Role role = usersService.createUser(chatId, firstName, lastName).getRole();
+  private void sendPhotoWithInlineButtons(long chatId) {
+    // Photo message
+    SendPhoto photo = new SendPhoto();
+    photo.setChatId(chatId);
+    photo.setPhoto(new InputFile(new File("./wallpaper.jpg")));
+    photo.setCaption("Welcome to LilCoin! \uD83C\uDF89\n" +
+      "\n" +
+      "\uD83D\uDCB0 LilCoin is a mini app within the Telegram App, initially operating on a 'tap-to-earn' model, allowing users to earn coins by tapping a gold coin. \uD83E\uDE99\n" +
+      "\n" +
+      "✨ The concept behind the LilCoin Community is to present its native token as unique and distinct from other coins. \uD83C\uDF1F");
+    photo.setParseMode("Markdown");
 
-    SendMessage message = new SendMessage();
-    message.setChatId(chatId);
-    message.enableHtml(true);
+    // Inline buttons
+    InlineKeyboardMarkup inlineKeyboard = new InlineKeyboardMarkup();
+    List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
-    if (role.equals(Role.ROLE_USER)) {
-      message.setText("Welcome User, What's up?");
-    } else if (role.equals(Role.ROLE_ADMIN)) {
-      message.setText("Welcome Admin, What's up?");
-    }
+    // First row of buttons
+    List<InlineKeyboardButton> row1 = new ArrayList<>();
+    row1.add(InlineKeyboardButton.builder()
+      .text("Play Game 🚀")
+      .url("http://62.164.220.205:8083/coin")
+      .build());
+    row1.add(InlineKeyboardButton.builder()
+      .text("Our Channel 📢")
+      .url("https://t.me/YOUR_CHANNEL_LINK")
+      .build());
+
+    // Second row of buttons
+    List<InlineKeyboardButton> row2 = new ArrayList<>();
+    row2.add(InlineKeyboardButton.builder()
+      .text("Invite a Friend 🤝")
+      .url("https://t.me/YOUR_INVITE_LINK")
+      .build());
+
+    // Add rows to keyboard
+    keyboard.add(row1);
+    keyboard.add(row2);
+
+    inlineKeyboard.setKeyboard(keyboard);
+    photo.setReplyMarkup(inlineKeyboard);
 
     try {
-      execute(message);
+      // Execute the photo message
+      execute(photo);
     } catch (TelegramApiException e) {
-      log.error("Error in startCommandReceived()");
+      e.printStackTrace();
     }
   }
 

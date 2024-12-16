@@ -1,4 +1,4 @@
-package com.alcode.user;
+package com.lilcoin.user;
 
 import org.springframework.stereotype.Component;
 
